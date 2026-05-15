@@ -1,5 +1,5 @@
 # Wireless-Mouse
-Your Friendly Neighbourhood Trackpad/Mouse
+Your Friendly Neighbourhood Trackpad/Mouse.
 Turn your phone/tab into a smooth wireless trackpad for your computer.
 Scan the QR code, connect on the same Wi-Fi, and control your PC instantly.
 
