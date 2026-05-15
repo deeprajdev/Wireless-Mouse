@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Wireless Trackpad</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#f6f4ef;
+      --bg-highlight:#ffffff;
+      --panel:#ffffff;
+      --panel-soft:#fbfaf7;
+      --hint-bg:rgba(255,255,255,0.78);
+      --ink:#1f2933;
+      --muted:#717984;
+      --line:#ded8cc;
+      --accent:#315c72;
+      --accent-strong:#244759;
+      --accent-soft:#e7eef1;
+      --accent-line:#cfdee4;
+      --trackpad-active:#f8fbfb;
+      --trackpad-active-end:#ffffff;
+      --grid-line:rgba(222,216,204,0.48);
+      --shadow:rgba(31,41,51,0.10);
+      --soft-shadow:rgba(31,41,51,0.06);
+      --success:#267353;
+      --danger:#b84545;
+    }
+
+    body.dark{
+      --bg:#111827;
+      --bg-highlight:#263445;
+      --panel:#17212f;
+      --panel-soft:#1d2a3a;
+      --hint-bg:rgba(23,33,47,0.82);
+      --ink:#f3f4f6;
+      --muted:#aab2bf;
+      --line:#2d3948;
+      --accent:#8eb8c9;
+      --accent-strong:#c7e0ea;
+      --accent-soft:#203646;
+      --accent-line:#345466;
+      --trackpad-active:#1d2a3a;
+      --trackpad-active-end:#17212f;
+      --grid-line:rgba(88,109,130,0.34);
+      --shadow:rgba(0,0,0,0.32);
+      --soft-shadow:rgba(0,0,0,0.22);
+      --success:#69c398;
+      --danger:#e06f6f;
+    }
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    body{
+      font-family:'Outfit',sans-serif;
+      background:
+        radial-gradient(circle at top left, var(--bg-highlight) 0, transparent 34%),
+        var(--bg);
+      color:var(--ink);
+      height:100dvh;
+      display:flex;
+      flex-direction:column;
+      padding:18px;
+      gap:14px;
+      overflow:hidden;
+      user-select:none;
+      transition:background 0.25s, color 0.25s;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .header-actions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .title{
+      font-size:20px;
+      font-weight:700;
+      line-height:1;
+    }
+
+    .status{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      font-size:12px;
+      font-weight:600;
+      padding:7px 11px;
+      border-radius:999px;
+      background:var(--panel);
+      border:1px solid var(--line);
+      color:var(--muted);
+      box-shadow:0 8px 24px var(--soft-shadow);
+    }
+
+    .dot{
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:var(--danger);
+      transition:background 0.3s, box-shadow 0.3s;
+    }
+
+    .dot.connected{
+      background:var(--success);
+      box-shadow:0 0 0 4px rgba(38,115,83,0.12);
+    }
+
+    .theme-toggle{
+      position:relative;
+      width:46px;
+      height:30px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:var(--panel);
+      cursor:pointer;
+      flex:0 0 auto;
+      transition:background 0.25s, border-color 0.25s;
+      box-shadow:0 8px 24px var(--soft-shadow);
+    }
+
+    .theme-toggle::after{
+      content:'';
+      position:absolute;
+      top:5px;
+      left:5px;
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      background:var(--accent);
+      transition:transform 0.25s, background 0.25s;
+    }
+
+    body.dark .theme-toggle::after{
+      transform:translateX(16px);
+    }
+
+    .trackpad-container{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:0;
+    }
+
+    .trackpad{
+      flex:1;
+      min-height:0;
+      background:
+        linear-gradient(var(--panel), var(--panel)) padding-box,
+        linear-gradient(135deg, rgba(49,92,114,0.32), var(--line)) border-box;
+      border:1px solid transparent;
+      border-radius:18px;
+      touch-action:none;
+      cursor:grab;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:500;
+      user-select:none;
+      overflow:hidden;
+      box-shadow:0 18px 54px var(--shadow);
+    }
+
+    .trackpad::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size:30px 30px;
+      opacity:0.7;
+    }
+
+    .trackpad.active{
+      border-color:var(--accent);
+      background:
+        linear-gradient(var(--trackpad-active), var(--trackpad-active-end)) padding-box,
+        linear-gradient(135deg, var(--accent), #b8c8cd) border-box;
+    }
+
+    .trackpad-hint{
+      position:absolute;
+      pointer-events:none;
+      z-index:1;
+      padding:8px 12px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:var(--hint-bg);
+      color:var(--muted);
+      box-shadow:0 10px 24px var(--soft-shadow);
+    }
+
+    .controls,
+    .scroll-area{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .btn,
+    .scroll-btn{
+      min-height:46px;
+      padding:12px 10px;
+      border:1px solid var(--line);
+      background:var(--panel);
+      color:var(--ink);
+      border-radius:8px;
+      font-family:'Outfit',sans-serif;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      transition:background 0.2s, border-color 0.2s, transform 0.2s, color 0.2s;
+      touch-action:manipulation;
+      user-select:none;
+      box-shadow:0 8px 22px var(--soft-shadow);
+    }
+
+    .scroll-btn{
+      background:var(--accent-soft);
+      border-color:var(--accent-line);
+      color:var(--accent-strong);
+    }
+
+    .btn:active,
+    .scroll-btn:active{
+      border-color:var(--accent);
+      transform:scale(0.98);
+    }
+
+    .btn:active{
+      background:var(--panel-soft);
+    }
+
+    .scroll-btn:active{
+      background:#dbe8ec;
+    }
+
+    footer{
+      font-size:12px;
+      font-weight:500;
+      color:var(--muted);
+      text-align:center;
+      padding:2px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title">Trackpad</div>
+    <div class="header-actions">
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Turn dark theme on" aria-pressed="false"></button>
+
+      <div class="status">
+        <span class="dot" id="dot"></span>
+        <span id="status-text">Connecting...</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="trackpad-container">
+    <div class="trackpad" id="trackpad">
+      <span class="trackpad-hint">Swipe, tap, or use two fingers</span>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="left-btn">Left Click</button>
+      <button class="btn" id="right-btn">Right Click</button>
+    </div>
+
+    <div class="scroll-area">
+      <button class="scroll-btn" id="scroll-up">Scroll Up</button>
+      <button class="scroll-btn" id="scroll-down">Scroll Down</button>
+    </div>
+  </div>
+
+  <footer>Wireless Mouse</footer>
+
+  <script>
+    const ws = new WebSocket(`ws://${window.location.host}`);
+    const trackpad = document.getElementById('trackpad');
+    const dot = document.getElementById('dot');
+    const statusText = document.getElementById('status-text');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    let isTracking = false;
+    let lastX = 0;
+    let lastY = 0;
+    let scrollLastY = 0;
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    let maxTouches = 0;
+    let moved = false;
+
+    const MAX_TAP_MOVE = 12;
+    const MAX_TAP_MS = 230;
+    const MOVE_SPEED = 2.2;
+    const TRACKPAD_SCROLL_SPEED = 0.35;
+
+    function setTheme(theme) {
+      const isDark = theme === 'dark';
+
+      document.body.classList.toggle('dark', isDark);
+      themeToggle.setAttribute('aria-pressed', String(isDark));
+      themeToggle.setAttribute(
+        'aria-label',
+        isDark ? 'Turn dark theme off' : 'Turn dark theme on'
+      );
+      localStorage.setItem('wirelessMouseTheme', theme);
+    }
+
+    setTheme(localStorage.getItem('wirelessMouseTheme') || 'light');
+
+    themeToggle.addEventListener('click', () => {
+      setTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+    });
+
+    function send(message) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(message));
+      }
+    }
+
+    ws.addEventListener('open', () => {
+      dot.classList.add('connected');
+      statusText.textContent = 'Connected';
+      console.log('Connected to server');
+    });
+
+    ws.addEventListener('close', () => {
+      dot.classList.remove('connected');
+      statusText.textContent = 'Disconnected';
+      console.log('Disconnected from server');
+    });
+
+    ws.addEventListener('error', (err) => {
+      console.error('WebSocket error:', err);
+      statusText.textContent = 'Error';
+    });
+
+    trackpad.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isTracking = true;
+      const touch = e.touches[0];
+
+      if (e.touches.length === 1) {
+        startX = touch.clientX;
+        startY = touch.clientY;
+        startTime = Date.now();
+        maxTouches = 1;
+        moved = false;
+      }
+
+      maxTouches = Math.max(maxTouches, e.touches.length);
+      lastX = touch.clientX;
+      lastY = touch.clientY;
+      scrollLastY = touch.clientY;
+      trackpad.classList.add('active');
+    }, { passive: false });
+
+    trackpad.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!isTracking) return;
+
+      const touch = e.touches[0];
+      const fingers = e.touches.length;
+      const distance = Math.abs(touch.clientX - startX) + Math.abs(touch.clientY - startY);
+
+      if (distance > MAX_TAP_MOVE) {
+        moved = true;
+      }
+
+      if (fingers === 1) {
+        const dx = touch.clientX - lastX;
+        const dy = touch.clientY - lastY;
+
+        if (dx !== 0 || dy !== 0) {
+          send({
+            type: 'move',
+            dx: Math.round(dx * MOVE_SPEED),
+            dy: Math.round(dy * MOVE_SPEED)
+          });
+        }
+      }
+
+      if (fingers === 2) {
+        const scrollDy = Math.round((touch.clientY - scrollLastY) * TRACKPAD_SCROLL_SPEED);
+
+        if (scrollDy !== 0) {
+          send({
+            type: 'scroll',
+            dy: scrollDy
+          });
+        }
+
+        moved = true;
+      }
+
+      lastX = touch.clientX;
+      lastY = touch.clientY;
+      scrollLastY = touch.clientY;
+    }, { passive: false });
+
+    trackpad.addEventListener('touchend', (e) => {
+      e.preventDefault();
+
+      if (e.touches.length !== 0) return;
+
+      isTracking = false;
+      trackpad.classList.remove('active');
+
+      const elapsed = Date.now() - startTime;
+      const isTap = !moved && elapsed < MAX_TAP_MS;
+
+      if (isTap) {
+        navigator.vibrate?.(maxTouches === 1 ? 20 : [20, 40, 20]);
+
+        send({
+          type: 'click',
+          button: maxTouches === 1 ? 'left' : 'right'
+        });
+      }
+
+      maxTouches = 0;
+    }, { passive: false });
+
+    trackpad.addEventListener('touchcancel', (e) => {
+      e.preventDefault();
+      isTracking = false;
+      maxTouches = 0;
+      trackpad.classList.remove('active');
+    }, { passive: false });
+
+    trackpad.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      isTracking = true;
+      moved = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      startTime = Date.now();
+      lastX = e.clientX;
+      lastY = e.clientY;
+      trackpad.classList.add('active');
+    });
+
+    trackpad.addEventListener('mousemove', (e) => {
+      if (!isTracking) return;
+      e.preventDefault();
+
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      const distance = Math.abs(e.clientX - startX) + Math.abs(e.clientY - startY);
+
+      if (distance > MAX_TAP_MOVE) {
+        moved = true;
+      }
+
+      if (dx !== 0 || dy !== 0) {
+        send({
+          type: 'move',
+          dx: Math.round(dx * MOVE_SPEED),
+          dy: Math.round(dy * MOVE_SPEED)
+        });
+        lastX = e.clientX;
+        lastY = e.clientY;
+      }
+    });
+
+    trackpad.addEventListener('mouseup', (e) => {
+      e.preventDefault();
+      isTracking = false;
+      trackpad.classList.remove('active');
+    });
+
+    trackpad.addEventListener('mouseleave', () => {
+      isTracking = false;
+      trackpad.classList.remove('active');
+    });
+
+    document.getElementById('left-btn').addEventListener('click', () => {
+      send({ type: 'click', button: 'left' });
+    });
+
+    document.getElementById('right-btn').addEventListener('click', () => {
+      send({ type: 'click', button: 'right' });
+    });
+
+    document.getElementById('scroll-up').addEventListener('click', () => {
+      send({ type: 'scroll', dy: -10 });
+    });
+
+    document.getElementById('scroll-down').addEventListener('click', () => {
+      send({ type: 'scroll', dy: 10 });
+    });
+  </script>
+</body>
+</html>

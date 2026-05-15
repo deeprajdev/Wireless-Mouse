@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>WireLess TrackPad</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+:root{
+  --bg:#1f2320;
+  --bg-highlight:#2a2f2b;
+  --panel:rgba(42,47,43,0.78);
+  --panel-glass:rgba(35,39,36,0.72);
+  --ink:#f5f3ee;
+  --muted:#a1a69b;
+  --line:#3b413d;
+  --accent:#8d9b6f;
+  --accent-soft:#2e352d;
+  --accent-line:#56604f;
+  --shadow:rgba(0,0,0,0.28);
+  --success:#7fa37d;
+  --danger:#c87c7c;
+}
+
+   body.dark{
+  --bg:#1d211e;
+  --bg-highlight:#2a302c;
+  --panel:#252b27;
+  --panel-glass:rgba(37,43,39,0.84);
+  --ink:#f4f1ea;
+  --muted:#a2a89c;
+  --line:#3a413c;
+  --accent:#8d9b6f;
+  --accent-soft:#31382f;
+  --accent-line:#56604f;
+  --shadow:rgba(0,0,0,0.30);
+  --success:#7fa37d;
+  --danger:#be4d4d;
+}
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+      font-family:'Outfit',sans-serif;
+      background:
+        radial-gradient(circle at top left, #f7f5f1,
+    #f1ebdf 60%),
+        var(--bg);
+      color:var(--ink);
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      user-select:none;
+      transition:background 0.25s, color 0.25s;
+    }
+
+    main{
+      position:relative;
+      width:100%;
+      max-width:340px;
+      background:var(--panel-glass);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:26px;
+      text-align:center;
+      box-shadow:0 24px 70px var(--shadow);
+      backdrop-filter:blur(12px);
+      transition:background 0.25s, border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .theme-toggle{
+      position:absolute;
+      top:14px;
+      right:14px;
+      width:46px;
+      height:26px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:var(--panel);
+      cursor:pointer;
+      transition:background 0.25s, border-color 0.25s;
+    }
+
+    .theme-toggle::after{
+      content:'';
+      position:absolute;
+      top:4px;
+      left:4px;
+      width:16px;
+      height:16px;
+      border-radius:50%;
+      background:var(--accent);
+      transition:transform 0.25s, background 0.25s;
+    }
+
+    body.dark .theme-toggle::after{
+      transform:translateX(20px);
+    }
+
+    .eyebrow{
+      color:var(--accent);
+      font-size:12px;
+      font-weight:700;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+
+    h1{
+      font-size:28px;
+      font-weight:700;
+      line-height:1.05;
+      margin-bottom:8px;
+    }
+
+    .subtitle{
+      font-size:14px;
+      color:var(--muted);
+      margin-bottom:24px;
+    }
+
+    .qr-box{
+      background:var(--panel);
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      display:inline-block;
+      margin-bottom:18px;
+      box-shadow:0 10px 30px var(--shadow);
+    }
+
+    .ip-label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .ip-value{
+      width:100%;
+      font-size:14px;
+      font-weight:600;
+      color:var(--accent);
+      background:var(--accent-soft);
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid var(--accent-line);
+      margin-bottom:18px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .status-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .status-dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:var(--danger);
+      display:inline-block;
+      margin-right:8px;
+      transition:background 0.4s, box-shadow 0.4s;
+    }
+
+    .status-dot.connected{
+      background:var(--success);
+      box-shadow:0 0 0 4px rgba(38,115,83,0.12);
+    }
+
+    #status-text{
+      transition:color 0.4s;
+    }
+
+    #status-text.connected{
+      color:var(--success);
+    }
+
+    .hint{
+      margin-top:18px;
+      font-size:12px;
+      color:var(--muted);
+      text-align:center;
+      line-height:1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Turn dark theme on" aria-pressed="false"></button>
+
+    <p class="eyebrow">YOUR FRIENDLY Trackpad</p>
+
+    <h1>Connect your phone</h1>
+
+    <p class="subtitle">
+      Use your phone/tab as a clean, responsive trackpad.
+    </p>
+
+    <div class="qr-box" id="qr"></div>
+
+    <p class="ip-label">
+      Open this address on your device
+    </p>
+
+    <div class="ip-value" id="ip-display">
+      loading...
+    </div>
+
+    <div class="status-row">
+      <span class="status-dot" id="dot"></span>
+
+      <span id="status-text">
+        Waiting for phone...
+      </span>
+    </div>
+
+    <p class="hint">
+      Keep both devices on the same Wi-Fi network.
+    </p>
+  </main>
+
+  <script>
+    const { ipcRenderer } = window.require('electron');
+    const os = window.require('os');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    function setTheme(theme){
+      const isDark = theme === 'dark';
+
+      document.body.classList.toggle('dark', isDark);
+      themeToggle.setAttribute('aria-pressed', String(isDark));
+      themeToggle.setAttribute(
+        'aria-label',
+        isDark ? 'Turn dark theme off' : 'Turn dark theme on'
+      );
+      localStorage.setItem('wirelessMouseTheme', theme);
+    }
+
+    setTheme(localStorage.getItem('wirelessMouseTheme') || 'light');
+
+    themeToggle.addEventListener('click', () => {
+      setTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+    });
+
+    function getLocalIP(){
+      try{
+        const nets = os.networkInterfaces();
+
+        for(const name of Object.keys(nets)){
+          for(const net of nets[name]){
+            if(
+              net.family === 'IPv4' &&
+              !net.internal
+            ){
+              return net.address;
+            }
+          }
+        }
+      }catch(e){
+        console.error(e);
+      }
+
+      return 'localhost';
+    }
+
+    const ip = getLocalIP();
+    const url = `http://${ip}:3000`;
+
+    document.getElementById('ip-display').textContent = url;
+
+    const script = document.createElement('script');
+
+    script.src =
+    'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+
+    script.onload = () => {
+      new QRCode(
+        document.getElementById('qr'),
+        {
+          text:url,
+          width:160,
+          height:160
+        }
+      );
+    };
+
+    document.head.appendChild(script);
+
+    ipcRenderer.on(
+      'phone-status',
+      (event, connected) => {
+        const dot =
+        document.getElementById('dot');
+
+        const txt =
+        document.getElementById('status-text');
+
+        if(connected){
+          dot.classList.add('connected');
+          txt.classList.add('connected');
+
+          txt.textContent =
+          'Phone connected';
+        }else{
+          dot.classList.remove('connected');
+          txt.classList.remove('connected');
+
+          txt.textContent =
+          'Waiting for phone...';
+        }
+      }
+    );
+  </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "wirelessmice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@nut-tree-fork/nut-js": "^4.2.6",
+    "ws": "^8.20.0",
+    "express": "^4.18.0",
+    "electron": "^latest"
+  },
+  "devDependencies": {
+    "electron": "^42.0.1"
+  }
+}
